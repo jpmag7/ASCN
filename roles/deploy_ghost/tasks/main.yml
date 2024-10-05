@@ -1,0 +1,96 @@
+---
+- name: Create GCP address
+  google.cloud.gcp_compute_address:
+    name: ghost-app-address
+    region: us-central1
+    project: "{{ gcp_project }}"
+    auth_kind: "{{ gcp_auth_kind }}"
+    service_account_file: "{{ gcp_cred_file }}"
+    state: present
+  register: address
+
+# Atualiza as variaveis necessarias para o ghost
+- name: Update variables
+  set_fact:
+    ghost_ip: "{{ address.address }}"
+    ghost_port: 80
+
+- name: Deploy Ghost
+  kubernetes.core.k8s:
+    state: present
+    definition: 
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: ghost-deployment
+        namespace: "{{ namespace }}"
+        labels: 
+          app: ghost
+      spec:
+        replicas: 1
+        selector: 
+          matchLabels:
+            app: ghost
+        strategy: 
+          type: Recreate
+        template:
+          metadata:
+            labels:
+              app: ghost
+          spec:
+            containers:
+              - name: ghost
+                image: "{{ ghost_image }}"
+                env:
+                - name: database__connection__host
+                  value: "{{ database_service }}"
+                  url: http://localhost:3306
+                - name: database__connection__database
+                  value: "{{ database_name }}"
+                - name: database__connection__user
+                  value: "{{ database_user }}"
+                - name: database__connection__password
+                  valueFrom:
+                    secretKeyRef:
+                      name: ghost-secret-data
+                      key: password
+                ports:
+                  - containerPort: "{{ ghost_container_port }}"
+              
+
+- name: Create PVC for Ghost
+  kubernetes.core.k8s:
+    state: present
+    definition: 
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: ghost-pvc
+        namespace: "{{ namespace }}"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: ghost-local-storage
+        resources:
+          requests:
+            storage: 10Gi
+
+- name: Create Ghost Service
+  kubernetes.core.k8s:
+    state: present
+    definition:   
+      apiVersion: v1
+      kind: Service
+      metadata: 
+        name: ghost-service
+        namespace: "{{ namespace }}"
+        labels:
+          app: ghost
+      spec:
+        type: LoadBalancer
+        loadBalancerIP: "{{ address.address }}"
+        selector:
+          app: ghost
+        ports:
+          - targetPort: "{{ ghost_container_port }}" # Port that containers are listening on
+            port: "{{ ghost_port }}" # Port that's exposed internally in the cluster

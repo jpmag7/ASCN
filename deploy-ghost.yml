@@ -1,0 +1,14 @@
+---
+# Playbook to deploy Ghost and its components
+# TO DO
+
+- hosts: localhost
+  tasks: 
+    - name: Creating kubernetes secrets
+      command: kubectl apply -f inventory/secret.yml 
+
+- name: Deploy ghost database
+  hosts: localhost
+  roles: 
+    - deploy_mysql
+    - deploy_ghost

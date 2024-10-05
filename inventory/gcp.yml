@@ -1,0 +1,38 @@
+---
+all:
+ vars:
+
+  # GKE cluster variables
+  gcp_project: ultra-climber-338823        # ID of GCP Project
+  gcp_auth_kind: serviceaccount            # Do not change
+  gcp_cred_file: ./Resources/sa.json       # Path to service account keys (json file downloaded from GCP)
+
+  gcp_zone: us-central1-a
+  gcp_image_type: ubuntu_containerd
+  gcp_machine_type: e2-small          # Can be changed if necessary
+  gcp_disk_size_gb: 100                # Can be changed if necessary
+  gcp_initial_node_count: 2            # Number of nodes to create. Can be changed if necessary
+
+
+  # DB variables
+  database_name: ghost_database
+  database_user: ghostUser
+  database_port: 3306       # Default port for MySQL
+  database_service: ghost-mysql-service
+
+  # Ghost variables
+  ghost_image: ghost:5.14.1        # Recommended in Blackboard's FAQ
+
+
+
+  # APP variables
+  ghost_ip: <GHOST_SERVICE_IP>     # Needs to be updated
+  ghost_port: <GHOST_SERVICE_PORT>
+  
+
+  # GHOST variables
+  ghost_container_port: 2368
+
+
+  # Additional variables
+  namespace: default

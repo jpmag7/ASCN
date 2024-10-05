@@ -1,0 +1,15 @@
+---
+- name: Delete MySQL deployment
+  shell: kubectl delete deployment ghost-mysql-deployment
+  
+- name: Delete MySQL Service
+  shell: kubectl delete service ghost-mysql-service
+
+- name: Delete Persistent Volume Claim
+  shell: kubectl delete pvc ghost-mysql-pvc
+
+- name: Delete Storage Class
+  shell: kubectl delete sc ghost-local-storage
+
+- name: Delete Secrets
+  shell: kubectl delete secret ghost-secret-data
